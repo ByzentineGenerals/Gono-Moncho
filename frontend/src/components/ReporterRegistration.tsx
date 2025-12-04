@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { CONTRACT_ADDRESSES, ReporterRegistryABI, NEWSABI } from "@/lib/contracts";
 import { parseEther, formatEther } from "viem";
 import { useToast } from "@/context/ToastContext";
+import { useTranslations } from 'next-intl';
 
 // Role enum matching contract
 enum UserRole {
@@ -36,6 +37,7 @@ const ROLE_STAKES = {
 };
 
 export default function ReporterRegistration() {
+  const t = useTranslations();
   const { address, isConnected } = useAccount();
   const [selectedRole, setSelectedRole] = useState<UserRole>(UserRole.REPORTER);
   const [ipfsHash, setIpfsHash] = useState("");
@@ -147,18 +149,18 @@ export default function ReporterRegistration() {
   if (!isConnected) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">📝 Reporter Registration</h2>
+        <h2 className="text-2xl font-bold mb-4">📝 {t('reporter.registration')}</h2>
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <p className="text-yellow-800">Please connect your wallet to register as a reporter.</p>
+          <p className="text-yellow-800">{t('auth.pleaseConnect')}</p>
         </div>
       </div>
     );
   }
 
   const profile = reporterData as any;
-  const status = profile ? Number(profile.status) : ReporterStatus.NONE;
-  const role = profile ? Number(profile.role) : UserRole.NONE;
-  const stakedAmount = profile ? formatEther(profile.stakedAmount) : "0";
+  const status = profile ? Number(profile[1]) : ReporterStatus.NONE;
+  const role = profile ? Number(profile[0]) : UserRole.NONE;
+  const stakedAmount = profile && profile[2] ? formatEther(profile[2]) : "0";
   const isTestingMode = Boolean(testingMode);
   const newsBalanceFormatted = newsBalance ? formatEther(newsBalance) : "0";
 
@@ -195,10 +197,10 @@ export default function ReporterRegistration() {
           </div>
         </div>
 
-        {profile.ipfsMetadata && (
+        {profile && profile[5] && (
           <div className="mb-4 p-4 bg-gray-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">Credentials</p>
-            <p className="text-sm font-mono break-all">{profile.ipfsMetadata}</p>
+            <p className="text-sm font-mono break-all">{profile[5]}</p>
           </div>
         )}
 
@@ -240,7 +242,7 @@ export default function ReporterRegistration() {
           <div className="bg-green-50 p-4 rounded-lg border border-green-200">
             <p className="text-green-800">✅ You are verified and can publish articles!</p>
             <p className="text-sm text-green-700 mt-1">
-              Published Articles: {Number(profile.publishedArticles)}
+              Published Articles: {profile ? Number(profile[7]) : 0}
             </p>
           </div>
         )}
@@ -256,7 +258,7 @@ export default function ReporterRegistration() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">📝 Register as Reporter</h2>
+      <h2 className="text-2xl font-bold mb-4">📝 {t('reporter.registration')}</h2>
       
       {!isReporterRegistryDeployed && (
         <div className="bg-red-50 p-4 rounded-lg border-2 border-red-500 mb-4">

@@ -2,13 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 import ConnectButton from './ConnectButton';
+import LanguageSwitcher from './LanguageSwitcher';
 import { useArticles } from '@/context/ArticleContext';
 import { useUserRole } from '@/Hooks/useUserRole';
 
 export default function Header() {
   const router = useRouter();
+  const pathname = usePathname();
+  const locale = useLocale();
+  const t = useTranslations();
   const { categories, selectedCategory, setSelectedCategory } = useArticles();
   const { isJournalist, isLoading } = useUserRole();
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,7 +29,7 @@ export default function Header() {
     setSelectedCategory(category);
     // Use setTimeout to ensure state update happens before navigation
     setTimeout(() => {
-      router.push('/');
+      router.push(`/${locale}`);
     }, 0);
   };
 
@@ -32,7 +37,7 @@ export default function Header() {
     e.preventDefault();
     setSelectedCategory('All');
     setTimeout(() => {
-      router.push('/');
+      router.push(`/${locale}`);
     }, 0);
   };
 
@@ -43,25 +48,28 @@ export default function Header() {
         <div className="container mx-auto px-4 py-3 flex justify-between items-center text-sm">
           <div className="flex items-center gap-3">
             <span className="text-gray-600 font-medium">
-              📅 {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
+              📅 {new Date().toLocaleDateString(locale === 'bn' ? 'bn-BD' : 'en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
           <div className="flex items-center gap-3">
             
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+            
             {/* Navigation Links with modern styling */}
             <Link 
-              href="/reporter" 
+              href={`/${locale}/reporter`}
               className="group relative font-semibold text-gray-700 hover:text-primary-600 transition-all duration-300 px-3 py-2"
             >
-              <span className="relative z-10">🎤 Reporter Portal</span>
+              <span className="relative z-10">🎤 {t('nav.reporters')}</span>
               <span className="absolute inset-0 bg-primary-50 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
             </Link>
             
             <Link 
-              href="/governance" 
+              href={`/${locale}/governance`}
               className="group relative font-semibold text-gray-700 hover:text-primary-600 transition-all duration-300 px-3 py-2"
             >
-              <span className="relative z-10">🏛️ Governance</span>
+              <span className="relative z-10">🏛️ {t('nav.governance')}</span>
               <span className="absolute inset-0 bg-primary-50 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
             </Link>
 
@@ -77,14 +85,14 @@ export default function Header() {
       
       {/* Main header with logo - Enhanced with gradient and animations */}
       <div className="py-8 text-center bg-gradient-to-r from-gray-50 via-white to-gray-50">
-        <Link href="/" className="group inline-block" onClick={handleLogoClick}>
+        <Link href={`/${locale}`} className="group inline-block" onClick={handleLogoClick}>
           <h1 className="text-6xl md:text-7xl font-serif font-black bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent group-hover:from-primary-700 group-hover:via-primary-600 group-hover:to-primary-700 transition-all duration-500 tracking-tight">
-            Gono Moncho
+            {locale === 'bn' ? 'গণ-মঞ্চ' : 'Gono Moncho'}
           </h1>
           <div className="flex items-center justify-center gap-2 mt-3">
             <span className="h-px w-12 bg-gradient-to-r from-transparent to-primary-400"></span>
             <p className="text-sm font-medium text-gray-600 uppercase tracking-widest">
-              Decentralized • Verifiable • Trustworthy
+              {t('home.subtitle')}
             </p>
             <span className="h-px w-12 bg-gradient-to-l from-transparent to-primary-400"></span>
           </div>
@@ -121,7 +129,7 @@ export default function Header() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search..."
+                    placeholder={t('common.search')}
                     className="w-64 px-4 py-2 pl-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200"
                     autoFocus
                   />
