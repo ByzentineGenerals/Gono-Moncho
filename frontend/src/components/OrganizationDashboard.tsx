@@ -100,11 +100,11 @@ export default function OrganizationDashboard() {
         <CardContent className="grid grid-cols-3 gap-4">
           <div>
             <p className="text-sm text-gray-500">Stake Amount</p>
-            <p className="text-2xl font-bold">{formatEther(outletData[6])} NEWS</p>
+            <p className="text-2xl font-bold">{outletData[6] ? formatEther(outletData[6]) : '0'} NEWS</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Credibility Score</p>
-            <p className="text-2xl font-bold">{Number(outletData[9]) / 100}</p>
+            <p className="text-2xl font-bold">{outletData[9] ? Number(outletData[9]) / 100 : 0}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Organization Stake</p>

@@ -4,8 +4,10 @@ import { useAccount, useConnect, useDisconnect, useSwitchChain, useChainId } fro
 import { injected } from 'wagmi/connectors';
 import { polygonAmoy } from 'wagmi/chains';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export default function ConnectButton() {
+  const t = useTranslations();
   const { address, isConnected } = useAccount();
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
@@ -33,13 +35,13 @@ export default function ConnectButton() {
         {showNetworkWarning && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-1.5">
             <span className="text-xs font-semibold text-red-700">
-              ⚠️ Wrong Network
+              ⚠️ {t('auth.wrongNetwork')}
             </span>
             <button
               onClick={handleSwitchNetwork}
               className="text-xs bg-red-600 hover:bg-red-700 text-white font-semibold py-1 px-2 rounded transition-colors duration-200"
             >
-              Switch Network
+              {t('auth.switchNetwork')}
             </button>
           </div>
         )}
@@ -56,7 +58,7 @@ export default function ConnectButton() {
           onClick={() => disconnect()}
           className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-2 px-5 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5"
         >
-          Disconnect
+          {t('auth.disconnect')}
         </button>
       </div>
     );
@@ -68,7 +70,7 @@ export default function ConnectButton() {
       className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
     >
       <span>🔗</span>
-      <span>Connect Wallet</span>
+      <span>{t('auth.connectWallet')}</span>
     </button>
   );
 }
