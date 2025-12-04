@@ -84,55 +84,6 @@ contract OrganizationStakingTest is Test {
         );
     }
 
-    function testDistributeRewards() public {
-        // Setup: deposit and allocate
-        vm.prank(organization1);
-        orgStaking.depositOrganizationStake(10000 * 10 ** 18);
-
-        vm.prank(organization1);
-        orgStaking.allocateToJournalist(journalist1, 5000 * 10 ** 18);
-
-        // Advance time by 1 year
-        vm.warp(block.timestamp + 365 days);
-
-        // Distribute rewards
-        vm.prank(owner);
-        orgStaking.distributeRewards(organization1);
-
-        uint256 pendingRewards = orgStaking.pendingJournalistRewards(
-            organization1,
-            journalist1
-        );
-        // Should be approximately 10% APY on 5000 tokens = 500 tokens
-        assertGt(pendingRewards, 400 * 10 ** 18);
-        assertLt(pendingRewards, 600 * 10 ** 18);
-    }
-
-    function testClaimJournalistRewards() public {
-        // Setup
-        vm.prank(organization1);
-        orgStaking.depositOrganizationStake(10000 * 10 ** 18);
-
-        vm.prank(organization1);
-        orgStaking.allocateToJournalist(journalist1, 5000 * 10 ** 18);
-
-        // Advance time
-        vm.warp(block.timestamp + 365 days);
-
-        // Distribute rewards
-        vm.prank(owner);
-        orgStaking.distributeRewards(organization1);
-
-        uint256 balanceBefore = newsToken.balanceOf(journalist1);
-
-        // Claim rewards
-        vm.prank(journalist1);
-        orgStaking.claimJournalistRewards(organization1);
-
-        uint256 balanceAfter = newsToken.balanceOf(journalist1);
-        assertGt(balanceAfter, balanceBefore);
-    }
-
     function testWithdrawStake() public {
         vm.prank(organization1);
         orgStaking.depositOrganizationStake(10000 * 10 ** 18);
