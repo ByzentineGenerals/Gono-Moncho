@@ -7,12 +7,15 @@ import "../tokens/NEWS.sol";
 /**
  * @title OrganizationStaking
  * @notice Enables news organizations to stake on behalf of their affiliated journalists
- * @dev Per whitepaper Section VI: Delegated Stakes
+ * @dev Organizations stake to signal credibility and backing for journalists
  *
  * Organizations can:
- * - Stake NEWS tokens to support their journalists
- * - Distribute staking rewards among journalists
+ * - Stake NEWS tokens to support and vouch for their journalists
  * - Amplify journalist credibility through organizational backing
+ * - Signal long-term commitment to quality journalism
+ *
+ * Note: Staking provides credibility signal, not APY rewards
+ * Revenue comes from B2B integrations, syndication, subscriptions
  */
 contract OrganizationStaking is Ownable {
     NEWS public newsToken;
@@ -23,16 +26,12 @@ contract OrganizationStaking is Ownable {
     struct OrganizationStake {
         uint256 totalStaked;
         uint256 activeJournalists;
-        uint256 rewardsEarned;
-        uint256 rewardsClaimed;
         uint256 lastUpdateTime;
         bool active;
     }
 
     struct JournalistAllocation {
         uint256 stakedAmount;
-        uint256 rewardsEarned;
-        uint256 rewardsClaimed;
         uint256 allocationDate;
         bool active;
     }
@@ -49,11 +48,6 @@ contract OrganizationStaking is Ownable {
 
     // Journalist => organization list (journalists can be backed by multiple orgs)
     mapping(address => address[]) public journalistOrganizations;
-
-    // Staking reward rate: 10% APY
-    uint256 public constant ANNUAL_REWARD_RATE = 1000; // 10.00% (2 decimal precision)
-    uint256 public constant RATE_DENOMINATOR = 10000;
-    uint256 public constant SECONDS_PER_YEAR = 365 days;
 
     // Track total staked across all organizations
     uint256 public totalOrganizationStake;
@@ -77,21 +71,15 @@ contract OrganizationStaking is Ownable {
         uint256 amount
     );
 
-    event RewardsDistributed(
-        address indexed organization,
-        uint256 totalRewards,
-        uint256 journalistCount
-    );
-
-    event JournalistRewardsClaimed(
-        address indexed journalist,
-        address indexed organization,
-        uint256 amount
-    );
-
     event OrganizationStakeWithdrawn(
         address indexed organization,
         uint256 amount
+    );
+
+    event CredibilityBoosted(
+        address indexed journalist,
+        address indexed organization,
+        uint256 totalBacking
     );
 
     constructor(
@@ -116,11 +104,6 @@ contract OrganizationStaking is Ownable {
 
         // Update organization stake
         OrganizationStake storage stake = organizationStakes[msg.sender];
-
-        // Calculate pending rewards before updating
-        if (stake.active && stake.totalStaked > 0) {
-            _updateRewards(msg.sender);
-        }
 
         stake.totalStaked += amount;
         stake.active = true;
@@ -168,7 +151,11 @@ contract OrganizationStaking is Ownable {
             allocation.stakedAmount += amount;
         }
 
+        // Calculate total backing for credibility boost
+        uint256 totalBacking = getTotalJournalistBacking(journalist);
+
         emit StakeAllocatedToJournalist(msg.sender, journalist, amount);
+        emit CredibilityBoosted(journalist, msg.sender, totalBacking);
     }
 
     /**
@@ -189,9 +176,6 @@ contract OrganizationStaking is Ownable {
             "Insufficient allocated amount"
         );
 
-        // Update rewards before deallocation
-        _updateJournalistRewards(msg.sender, journalist);
-
         allocation.stakedAmount -= amount;
 
         // If fully deallocated, mark as inactive
@@ -201,68 +185,6 @@ contract OrganizationStaking is Ownable {
         }
 
         emit StakeDeallocated(msg.sender, journalist, amount);
-    }
-
-    /**
-     * @notice Calculate and distribute rewards to all journalists
-     */
-    function distributeRewards() external {
-        OrganizationStake storage orgStake = organizationStakes[msg.sender];
-        require(orgStake.active, "Organization not staking");
-
-        _updateRewards(msg.sender);
-
-        // Distribute proportionally to allocated journalists
-        address[] memory journalists = organizationJournalists[msg.sender];
-        uint256 totalRewardsToDistribute = orgStake.rewardsEarned -
-            orgStake.rewardsClaimed;
-
-        if (totalRewardsToDistribute > 0) {
-            for (uint256 i = 0; i < journalists.length; i++) {
-                address journalist = journalists[i];
-                JournalistAllocation storage allocation = allocations[
-                    msg.sender
-                ][journalist];
-
-                if (allocation.active && allocation.stakedAmount > 0) {
-                    // Calculate journalist's share based on their allocation
-                    uint256 journalistShare = (totalRewardsToDistribute *
-                        allocation.stakedAmount) / orgStake.totalStaked;
-                    allocation.rewardsEarned += journalistShare;
-                }
-            }
-        }
-
-        emit RewardsDistributed(
-            msg.sender,
-            totalRewardsToDistribute,
-            journalists.length
-        );
-    }
-
-    /**
-     * @notice Journalist claims their rewards from organization
-     * @param organization Organization to claim from
-     */
-    function claimJournalistRewards(address organization) external {
-        JournalistAllocation storage allocation = allocations[organization][
-            msg.sender
-        ];
-        require(allocation.active, "No active allocation");
-
-        _updateJournalistRewards(organization, msg.sender);
-
-        uint256 claimable = allocation.rewardsEarned -
-            allocation.rewardsClaimed;
-        require(claimable > 0, "No rewards to claim");
-
-        allocation.rewardsClaimed += claimable;
-        organizationStakes[organization].rewardsClaimed += claimable;
-
-        // Transfer rewards to journalist
-        require(newsToken.transfer(msg.sender, claimable), "Transfer failed");
-
-        emit JournalistRewardsClaimed(msg.sender, organization, claimable);
     }
 
     /**
@@ -321,80 +243,6 @@ contract OrganizationStaking is Ownable {
         address organization
     ) external view returns (address[] memory) {
         return organizationJournalists[organization];
-    }
-
-    /**
-     * @notice Get claimable rewards for journalist from organization
-     */
-    function getClaimableRewards(
-        address organization,
-        address journalist
-    ) external view returns (uint256) {
-        JournalistAllocation storage allocation = allocations[organization][
-            journalist
-        ];
-        if (!allocation.active) return 0;
-
-        // Calculate pending rewards
-        uint256 pending = _calculatePendingRewards(
-            allocation.stakedAmount,
-            allocation.allocationDate
-        );
-
-        return allocation.rewardsEarned + pending - allocation.rewardsClaimed;
-    }
-
-    /**
-     * @notice Internal: Update organization rewards
-     */
-    function _updateRewards(address organization) internal {
-        OrganizationStake storage stake = organizationStakes[organization];
-
-        if (stake.totalStaked > 0 && stake.lastUpdateTime > 0) {
-            uint256 timeElapsed = block.timestamp - stake.lastUpdateTime;
-            uint256 rewards = (stake.totalStaked *
-                ANNUAL_REWARD_RATE *
-                timeElapsed) / (RATE_DENOMINATOR * SECONDS_PER_YEAR);
-
-            stake.rewardsEarned += rewards;
-            stake.lastUpdateTime = block.timestamp;
-        }
-    }
-
-    /**
-     * @notice Internal: Update journalist-specific rewards
-     */
-    function _updateJournalistRewards(
-        address organization,
-        address journalist
-    ) internal {
-        JournalistAllocation storage allocation = allocations[organization][
-            journalist
-        ];
-
-        if (allocation.active && allocation.stakedAmount > 0) {
-            uint256 pending = _calculatePendingRewards(
-                allocation.stakedAmount,
-                allocation.allocationDate
-            );
-            allocation.rewardsEarned += pending;
-            allocation.allocationDate = block.timestamp;
-        }
-    }
-
-    /**
-     * @notice Internal: Calculate pending rewards
-     */
-    function _calculatePendingRewards(
-        uint256 amount,
-        uint256 since
-    ) internal view returns (uint256) {
-        if (amount == 0 || since == 0) return 0;
-
-        uint256 timeElapsed = block.timestamp - since;
-        return
-            (amount * ANNUAL_REWARD_RATE * timeElapsed) /
-            (RATE_DENOMINATOR * SECONDS_PER_YEAR);
     }
 
     /**
