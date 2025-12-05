@@ -2,18 +2,32 @@
 
 import ReporterRegistration from "@/components/ReporterRegistration";
 import ArweaveUploadHelper from "@/components/ArweaveUploadHelper";
+import VerifierDashboard from "@/components/VerifierDashboard";
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { CONTRACT_ADDRESSES, ReporterRegistryABI } from "@/lib/contracts";
 import dynamic from "next/dynamic";
+import { useTranslations } from 'next-intl';
 
 // Dynamically import PublishForm to avoid SSR issues
 const PublishForm = dynamic(() => import("@/components/PublishForm"), { ssr: false });
 
 export default function ReporterPage() {
-  const [activeTab, setActiveTab] = useState<"register" | "upload" | "publish">("register");
+  const t = useTranslations();
+  const [activeTab, setActiveTab] = useState<"register" | "upload" | "publish" | "verify">("register");
   const [uploadedHash, setUploadedHash] = useState("");
   const { address } = useAccount();
+
+  // Get user's reporter profile to check role
+  const { data: profileData } = useReadContract({
+    address: CONTRACT_ADDRESSES.ReporterRegistry,
+    abi: ReporterRegistryABI,
+    functionName: 'reporters',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    }
+  });
 
   // Check if user can publish
   const { data: canPublishData } = useReadContract({
@@ -27,6 +41,9 @@ export default function ReporterPage() {
   });
 
   const canPublish = Boolean(canPublishData);
+  const userRole = profileData ? Number(profileData[0]) : 0; // 0=NONE, 1=REPORTER, 2=ANALYZER, 3=VERIFIER
+  const isVerifier = userRole === 3;
+  const isReporter = userRole === 1;
 
   const handleUploadComplete = (hash: string, metadata: any) => {
     setUploadedHash(hash);
@@ -37,9 +54,9 @@ export default function ReporterPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">🎤 Reporter Portal</h1>
+          <h1 className="text-4xl font-bold mb-2">🎤 {t('reporterPortal.title')}</h1>
           <p className="text-gray-600">
-            Register as a verified reporter and upload content to decentralized storage
+            {t('reporterPortal.subtitle')}
           </p>
         </div>
 
@@ -53,29 +70,46 @@ export default function ReporterPage() {
                 : "bg-gray-200 text-gray-600 hover:bg-gray-300"
             }`}
           >
-            📝 Registration
+            📝 {t('reporterPortal.registrationTab')}
           </button>
-          <button
-            onClick={() => setActiveTab("upload")}
-            className={`px-6 py-3 rounded-t-lg font-semibold transition ${
-              activeTab === "upload"
-                ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-            }`}
-          >
-            📤 Upload Content
-          </button>
-          {canPublish && (
+          
+          {/* Show different tabs based on role */}
+          {isVerifier ? (
             <button
-              onClick={() => setActiveTab("publish")}
+              onClick={() => setActiveTab("verify")}
               className={`px-6 py-3 rounded-t-lg font-semibold transition ${
-                activeTab === "publish"
+                activeTab === "verify"
                   ? "bg-white text-blue-600 border-b-2 border-blue-600"
                   : "bg-gray-200 text-gray-600 hover:bg-gray-300"
               }`}
             >
-              ✍️ Publish Article
+              🔍 Verify Articles
             </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setActiveTab("upload")}
+                className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+                  activeTab === "upload"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                }`}
+              >
+                📤 {t('reporterPortal.uploadContentTab')}
+              </button>
+              {canPublish && (
+                <button
+                  onClick={() => setActiveTab("publish")}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+                    activeTab === "publish"
+                      ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                      : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  }`}
+                >
+                  ✍️ {t('reporterPortal.publishArticleTab')}
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -87,6 +121,7 @@ export default function ReporterPage() {
               <ArweaveUploadHelper onUploadComplete={handleUploadComplete} />
             )}
             {activeTab === "publish" && <PublishForm />}
+            {activeTab === "verify" && <VerifierDashboard />}
           </div>
 
           {/* Sidebar */}
@@ -151,23 +186,23 @@ export default function ReporterPage() {
 
             {/* Help */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-bold text-lg mb-4">❓ Need Help?</h3>
+              <h3 className="font-bold text-lg mb-4">❓ {t('reporterPortal.needHelp')}</h3>
               <div className="space-y-2 text-sm text-gray-700">
                 <p>
-                  <strong>Registration:</strong> Submit your credentials and wait for verification
+                  <strong>{t('reporter.registration')}:</strong> {t('reporterPortal.registrationHelp')}
                 </p>
                 <p>
-                  <strong>Staking:</strong> Lock NEWS tokens to meet role requirements
+                  <strong>{t('staking.title')}:</strong> {t('reporterPortal.stakingHelp')}
                 </p>
                 <p>
-                  <strong>Upload:</strong> Store content permanently on Arweave/IPFS
+                  <strong>{t('common.upload')}:</strong> {t('reporterPortal.uploadHelp')}
                 </p>
                 <p>
-                  <strong>Testing Mode:</strong> No staking required during beta
+                  <strong>{t('reporterPortal.testingMode')}:</strong> {t('reporterPortal.testingModeHelp')}
                 </p>
               </div>
               <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
-                Read Full Guide
+                {t('reporterPortal.readFullGuide')}
               </button>
             </div>
           </div>
@@ -177,23 +212,23 @@ export default function ReporterPage() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-3xl mb-3">🔐</div>
-            <h3 className="font-bold mb-2">Verified Identity</h3>
+            <h3 className="font-bold mb-2">{t('reporterPortal.verifiedIdentity')}</h3>
             <p className="text-sm text-gray-600">
-              Stake-based verification ensures only credible reporters can publish
+              {t('reporterPortal.verifiedIdentityDesc')}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-3xl mb-3">📦</div>
-            <h3 className="font-bold mb-2">Permanent Storage</h3>
+            <h3 className="font-bold mb-2">{t('reporterPortal.permanentStorage')}</h3>
             <p className="text-sm text-gray-600">
-              Content stored on Arweave is permanent and censorship-resistant
+              {t('reporterPortal.permanentStorageDesc')}
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md">
             <div className="text-3xl mb-3">🏆</div>
-            <h3 className="font-bold mb-2">Reputation System</h3>
+            <h3 className="font-bold mb-2">{t('reporterPortal.reputationSystem')}</h3>
             <p className="text-sm text-gray-600">
-              Earn CRED tokens and build reputation through quality reporting
+              {t('reporterPortal.reputationSystemDesc')}
             </p>
           </div>
         </div>

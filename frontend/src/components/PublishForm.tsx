@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount } from 'wagmi';
 import { VerificationABI, CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useArticles } from '@/context/ArticleContext';
 import { useToast } from '@/context/ToastContext';
 import { keccak256, stringToBytes } from 'viem';
 
 export default function PublishForm() {
+  const { address } = useAccount();
   const [headline, setHeadline] = useState('');
   const [content, setContent] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -87,6 +88,25 @@ export default function PublishForm() {
       
       showToast("Content uploaded! Publishing to blockchain...", "info");
       setIsUploadingToArweave(false);
+
+      // Save to localStorage for demo verifiers to see
+      const demoArticle = {
+        contentHash: arweaveHash,
+        author: address || "Unknown",
+        timestamp: Date.now(),
+        verificationStatus: 0, // PENDING
+        credibilityScore: 0,
+        totalVotes: 0,
+        headline,
+        content: content.slice(0, 200) + "..." // First 200 chars preview
+      };
+      
+      const existingArticles = JSON.parse(localStorage.getItem('demoArticles') || '[]');
+      const updatedArticles = [...existingArticles, demoArticle];
+      localStorage.setItem('demoArticles', JSON.stringify(updatedArticles));
+      
+      console.log('Article saved to localStorage:', demoArticle);
+      console.log('Total articles in storage:', updatedArticles.length);
 
       // Publish to blockchain using Arweave hash
       writeContract({

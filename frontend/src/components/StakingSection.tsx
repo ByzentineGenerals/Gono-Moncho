@@ -10,7 +10,13 @@ export default function StakingSection() {
   const { address, isConnected } = useAccount();
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
   const { showToast } = useToast();
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Get NEWS token balance
   const { data: newsBalance, refetch: refetchNewsBalance } = useReadContract({
@@ -137,7 +143,7 @@ export default function StakingSection() {
         <div className="p-4 bg-green-50 rounded-lg border border-green-200">
           <p className="text-sm text-green-800 mb-1">Staked NEWS</p>
           <p className="text-2xl font-bold text-green-900">{parseFloat(stakedAmount).toFixed(2)}</p>
-          {stakedAt > 0 && (
+          {isMounted && stakedAt > 0 && (
             <p className="text-xs text-green-700 mt-1">
               Since {new Date(stakedAt * 1000).toLocaleDateString()}
             </p>

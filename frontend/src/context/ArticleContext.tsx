@@ -214,43 +214,98 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
 
       const chainArticles = await Promise.all(
         recentHashes.map(async (hash, index) => {
-          const response = (await publicClient.readContract({
-            address: CONTRACT_ADDRESSES.Verification,
-            abi: VerificationABI,
-            functionName: "newsItems",
-            args: [hash],
-          })) as readonly [`0x${string}`, string, number | bigint, bigint];
+          try {
+            const response = (await publicClient.readContract({
+              address: CONTRACT_ADDRESSES.Verification,
+              abi: VerificationABI,
+              functionName: "newsItems",
+              args: [hash],
+            })) as readonly [`0x${string}`, string, number | bigint, bigint];
 
-          const [reporter, arweaveHash, statusRaw, credibilityScore] = response;
-          const statusBigInt =
-            typeof statusRaw === "bigint" ? statusRaw : BigInt(statusRaw);
-          const metadata = await fetchArweaveMetadata(arweaveHash || hash);
+            const [reporter, arweaveHash, statusRaw, credibilityScore] = response;
+            const statusBigInt =
+              typeof statusRaw === "bigint" ? statusRaw : BigInt(statusRaw);
+            const metadata = await fetchArweaveMetadata(arweaveHash || hash);
 
-          return {
-            id: index + 1,
-            headline:
-              metadata.headline ?? `Submission ${hash.slice(0, 10)}…`,
-            summary:
-              metadata.summary ?? `Arweave reference ${arweaveHash || hash}`,
-            author: reporter,
-            status: statusFromChain(statusBigInt),
-            statusLabel: getStatusLabel(statusBigInt),
-            category: metadata.category ?? "On-Chain",
-            contentHash: hash,
-            credibilityScore: Number(credibilityScore),
-            imageUrl:
-              metadata.imageUrl ??
-              `https://picsum.photos/seed/${hash.slice(0, 6)}/800/400`,
-            body: metadata.body,
-            isOnChain: true,
-          } satisfies Article;
+            return {
+              id: index + 1,
+              headline:
+                metadata.headline ?? `Submission ${hash.slice(0, 10)}…`,
+              summary:
+                metadata.summary ?? `Arweave reference ${arweaveHash || hash}`,
+              author: reporter,
+              status: statusFromChain(statusBigInt),
+              statusLabel: getStatusLabel(statusBigInt),
+              category: metadata.category ?? "On-Chain",
+              contentHash: hash,
+              credibilityScore: Number(credibilityScore),
+              imageUrl:
+                metadata.imageUrl ??
+                `https://picsum.photos/seed/${hash.slice(0, 6)}/800/400`,
+              body: metadata.body,
+              isOnChain: true,
+            } satisfies Article;
+          } catch (error) {
+            console.error(`Failed to fetch article ${hash}:`, error);
+            return null;
+          }
         })
-      );
+      ).then(articles => articles.filter(Boolean) as Article[]);
 
       if (chainArticles.length > 0) {
-        setArticles(chainArticles.reverse());
+        // Also load demo articles from localStorage
+        const storedArticles = localStorage.getItem('demoArticles');
+        let demoArticles: Article[] = [];
+        
+        if (storedArticles) {
+          const parsed = JSON.parse(storedArticles);
+          demoArticles = parsed
+            .filter((a: any) => a.verificationStatus === 2) // Only show verified articles
+            .map((a: any, index: number) => ({
+              id: chainArticles.length + index + 1,
+              headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
+              summary: a.content || `Content hash: ${a.contentHash}`,
+              author: a.author,
+              status: "Verified" as const,
+              statusLabel: "Human Verified",
+              category: "Demo",
+              contentHash: a.contentHash,
+              credibilityScore: a.credibilityScore || 0,
+              imageUrl: `https://picsum.photos/seed/${a.contentHash.slice(0, 6)}/800/400`,
+              isOnChain: false,
+            }));
+        }
+        
+        setArticles([...demoArticles, ...chainArticles.reverse()]);
       } else {
-        setArticles(mockArticles);
+        // Check localStorage even if no chain articles
+        const storedArticles = localStorage.getItem('demoArticles');
+        console.log('Loading from localStorage:', storedArticles);
+        
+        if (storedArticles) {
+          const parsed = JSON.parse(storedArticles);
+          console.log('Parsed demo articles:', parsed);
+          
+          const demoArticles = parsed
+            .filter((a: any) => a.verificationStatus === 2)
+            .map((a: any, index: number) => ({
+              id: index + 1,
+              headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
+              summary: a.content || `Content hash: ${a.contentHash}`,
+              author: a.author,
+              status: "Verified" as const,
+              statusLabel: "Human Verified",
+              category: "Demo",
+              contentHash: a.contentHash,
+              credibilityScore: a.credibilityScore || 0,
+              imageUrl: `https://picsum.photos/seed/${a.contentHash.slice(0, 6)}/800/400`,
+              isOnChain: false,
+            }));
+          
+          setArticles(demoArticles.length > 0 ? demoArticles : mockArticles);
+        } else {
+          setArticles(mockArticles);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch on-chain articles", error);
@@ -262,6 +317,28 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchArticlesFromChain();
+    
+    // Listen for storage changes (for cross-tab updates)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'demoArticles') {
+        console.log('Storage changed, refreshing articles...');
+        fetchArticlesFromChain();
+      }
+    };
+    
+    // Listen for custom refresh event
+    const handleRefreshEvent = () => {
+      console.log('Refresh event triggered, reloading articles...');
+      fetchArticlesFromChain();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('refreshArticles', handleRefreshEvent);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('refreshArticles', handleRefreshEvent);
+    };
   }, [fetchArticlesFromChain]);
 
   const filteredArticles = useMemo(

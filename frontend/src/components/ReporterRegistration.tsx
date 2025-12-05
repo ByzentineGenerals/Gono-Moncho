@@ -30,6 +30,14 @@ const ROLE_NAMES = {
   [UserRole.VERIFIER]: "Verifier"
 };
 
+const STATUS_NAMES = {
+  [ReporterStatus.NONE]: "Not Registered",
+  [ReporterStatus.PENDING]: "Pending Verification",
+  [ReporterStatus.VERIFIED]: "Verified",
+  [ReporterStatus.REJECTED]: "Rejected",
+  [ReporterStatus.SUSPENDED]: "Suspended"
+};
+
 const ROLE_STAKES = {
   [UserRole.REPORTER]: "100",
   [UserRole.ANALYZER]: "50",
@@ -167,10 +175,10 @@ export default function ReporterRegistration() {
   // Already registered
   if (status !== ReporterStatus.NONE) {
     const statusText = {
-      [ReporterStatus.PENDING]: "Pending Verification",
-      [ReporterStatus.VERIFIED]: "Verified ✅",
-      [ReporterStatus.REJECTED]: "Rejected ❌",
-      [ReporterStatus.SUSPENDED]: "Suspended ⚠️"
+      [ReporterStatus.PENDING]: t('reporterPortal.statusLabels.pending'),
+      [ReporterStatus.VERIFIED]: t('reporterPortal.statusLabels.verified') + " ✅",
+      [ReporterStatus.REJECTED]: t('reporterPortal.statusLabels.rejected') + " ❌",
+      [ReporterStatus.SUSPENDED]: t('reporterPortal.statusLabels.suspended') + " ⚠️"
     }[status] || "Unknown";
 
     const statusColor = {
@@ -182,13 +190,16 @@ export default function ReporterRegistration() {
 
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">📝 Reporter Profile</h2>
+        <h2 className="text-2xl font-bold mb-4">📝 {t('reporterPortal.reporterProfile')}</h2>
         
         <div className={`p-4 rounded-lg border mb-4 ${statusColor}`}>
           <div className="flex justify-between items-center">
             <div>
-              <p className="font-semibold">Status: {statusText}</p>
-              <p className="text-sm">Role: {ROLE_NAMES[role as UserRole]}</p>
+              <p className="font-semibold">{t('reporter.status')}: {statusText}</p>
+              <p className="text-sm">{t('reporter.role')}: {t(`reporterPortal.roleLabels.${
+                role === UserRole.REPORTER ? 'reporter' :
+                role === UserRole.ANALYZER ? 'analyzer' : 'verifier'
+              }`)}</p>
             </div>
             <div className="text-right">
               <p className="text-sm">Staked Amount</p>
