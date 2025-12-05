@@ -2,6 +2,7 @@
 
 import ReporterRegistration from "@/components/ReporterRegistration";
 import ArweaveUploadHelper from "@/components/ArweaveUploadHelper";
+import VerifierDashboard from "@/components/VerifierDashboard";
 import { useState, useEffect } from "react";
 import { useAccount, useReadContract } from "wagmi";
 import { CONTRACT_ADDRESSES, ReporterRegistryABI } from "@/lib/contracts";
@@ -13,9 +14,20 @@ const PublishForm = dynamic(() => import("@/components/PublishForm"), { ssr: fal
 
 export default function ReporterPage() {
   const t = useTranslations();
-  const [activeTab, setActiveTab] = useState<"register" | "upload" | "publish">("register");
+  const [activeTab, setActiveTab] = useState<"register" | "upload" | "publish" | "verify">("register");
   const [uploadedHash, setUploadedHash] = useState("");
   const { address } = useAccount();
+
+  // Get user's reporter profile to check role
+  const { data: profileData } = useReadContract({
+    address: CONTRACT_ADDRESSES.ReporterRegistry,
+    abi: ReporterRegistryABI,
+    functionName: 'reporters',
+    args: address ? [address] : undefined,
+    query: {
+      enabled: !!address,
+    }
+  });
 
   // Check if user can publish
   const { data: canPublishData } = useReadContract({
@@ -29,6 +41,9 @@ export default function ReporterPage() {
   });
 
   const canPublish = Boolean(canPublishData);
+  const userRole = profileData ? Number(profileData[0]) : 0; // 0=NONE, 1=REPORTER, 2=ANALYZER, 3=VERIFIER
+  const isVerifier = userRole === 3;
+  const isReporter = userRole === 1;
 
   const handleUploadComplete = (hash: string, metadata: any) => {
     setUploadedHash(hash);
@@ -57,27 +72,44 @@ export default function ReporterPage() {
           >
             📝 {t('reporterPortal.registrationTab')}
           </button>
-          <button
-            onClick={() => setActiveTab("upload")}
-            className={`px-6 py-3 rounded-t-lg font-semibold transition ${
-              activeTab === "upload"
-                ? "bg-white text-blue-600 border-b-2 border-blue-600"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-            }`}
-          >
-            📤 {t('reporterPortal.uploadContentTab')}
-          </button>
-          {canPublish && (
+          
+          {/* Show different tabs based on role */}
+          {isVerifier ? (
             <button
-              onClick={() => setActiveTab("publish")}
+              onClick={() => setActiveTab("verify")}
               className={`px-6 py-3 rounded-t-lg font-semibold transition ${
-                activeTab === "publish"
+                activeTab === "verify"
                   ? "bg-white text-blue-600 border-b-2 border-blue-600"
                   : "bg-gray-200 text-gray-600 hover:bg-gray-300"
               }`}
             >
-              ✍️ {t('reporterPortal.publishArticleTab')}
+              🔍 Verify Articles
             </button>
+          ) : (
+            <>
+              <button
+                onClick={() => setActiveTab("upload")}
+                className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+                  activeTab === "upload"
+                    ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                    : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                }`}
+              >
+                📤 {t('reporterPortal.uploadContentTab')}
+              </button>
+              {canPublish && (
+                <button
+                  onClick={() => setActiveTab("publish")}
+                  className={`px-6 py-3 rounded-t-lg font-semibold transition ${
+                    activeTab === "publish"
+                      ? "bg-white text-blue-600 border-b-2 border-blue-600"
+                      : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                  }`}
+                >
+                  ✍️ {t('reporterPortal.publishArticleTab')}
+                </button>
+              )}
+            </>
           )}
         </div>
 
@@ -89,6 +121,7 @@ export default function ReporterPage() {
               <ArweaveUploadHelper onUploadComplete={handleUploadComplete} />
             )}
             {activeTab === "publish" && <PublishForm />}
+            {activeTab === "verify" && <VerifierDashboard />}
           </div>
 
           {/* Sidebar */}
