@@ -84,7 +84,7 @@ Visit https://faucet.polygon.technology/
 
 ---
 
-## 🎯 Demo / Judge Presentation
+## Demo / Judge Presentation
 
 ### Complete Demo Flow (5 minutes)
 
