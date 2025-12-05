@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 type ArticleCardProps = {
   id: number;
@@ -23,11 +24,16 @@ export default function ArticleCard({
   credibilityScore,
   variant = 'medium'
 }: ArticleCardProps) {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  const articleLink = `/${locale}/article/${id}`;
+  
+  console.log('ArticleCard - locale:', locale, 'id:', id, 'link:', articleLink);
   
   // Hero variant - Main featured story (left column)
   if (variant === 'hero') {
     return (
-      <Link href={`/article/${id}`} className="block group">
+      <Link href={articleLink} className="block group" onClick={() => console.log('Clicked article:', id, 'link:', articleLink)}>
         <article className="bg-white border border-gray-200">
           {imageUrl && (
             <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '5/4' }}>
@@ -61,7 +67,7 @@ export default function ArticleCard({
   // Medium variant - Center column stories
   if (variant === 'medium') {
     return (
-      <Link href={`/article/${id}`} className="block group">
+      <Link href={articleLink} className="block group" onClick={() => console.log('Clicked article:', id, 'link:', articleLink)}>
         <article className="bg-white border border-gray-200">
           {imageUrl && (
             <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '16/9' }}>
@@ -95,7 +101,7 @@ export default function ArticleCard({
   // Compact variant - Right sidebar stories
   if (variant === 'compact') {
     return (
-      <Link href={`/article/${id}`} className="block group">
+      <Link href={articleLink} className="block group" onClick={() => console.log('Clicked article:', id, 'link:', articleLink)}>
         <article className="border-b border-gray-200 pb-4">
           <div className="flex gap-3">
             {imageUrl && (
@@ -123,7 +129,7 @@ export default function ArticleCard({
 
   // Small variant - Bottom grid stories
   return (
-    <Link href={`/article/${id}`} className="block group">
+    <Link href={articleLink} className="block group" onClick={() => console.log('Clicked article:', id, 'link:', articleLink)}>
       <article className="bg-white border border-gray-200 h-full flex flex-col">
         {imageUrl && (
           <div className="relative overflow-hidden bg-gray-100" style={{ aspectRatio: '4/3' }}>

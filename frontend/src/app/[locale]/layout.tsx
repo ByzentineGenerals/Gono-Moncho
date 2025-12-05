@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "গণ-মঞ্চ | Gono Moncho",
-  description: "বাংলাদেশের বিকেন্দ্রীকৃত সংবাদ প্ল্যাটফর্ম | Bangladesh's Decentralized News Platform",
+  description: "বাংলাদেশের বিকেন্দ্রীকৃত সংবাদ মাধ্যম | Bangladesh's Decentralized News Platform",
 };
 
 export function generateStaticParams() {

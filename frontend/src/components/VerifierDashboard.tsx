@@ -53,12 +53,14 @@ export default function VerifierDashboard() {
       
       // Update localStorage to mark article as verified
       const storedArticles = localStorage.getItem('demoArticles');
+      console.log('=== VERIFICATION SUCCESS ===');
       console.log('Before update:', storedArticles);
       
       if (storedArticles) {
         const parsed = JSON.parse(storedArticles);
         const updated = parsed.map((article: Article) => {
           if (article.contentHash === selectedArticle) {
+            console.log('Updating article:', article.contentHash);
             return {
               ...article,
               verificationStatus: 2, // HUMAN_VERIFIED
@@ -69,23 +71,20 @@ export default function VerifierDashboard() {
           return article;
         });
         
-        console.log('After update:', updated);
+        console.log('After update:', JSON.stringify(updated, null, 2));
         localStorage.setItem('demoArticles', JSON.stringify(updated));
         
-        // Trigger storage event manually for same-tab updates
-        window.dispatchEvent(new Event('storage'));
-        window.dispatchEvent(new Event('refreshArticles'));
+        // Force refresh the ArticleContext with a small delay to ensure localStorage is updated
+        console.log('Triggering article refresh...');
+        setTimeout(() => {
+          refreshArticles();
+        }, 100);
         
         // Remove verified article from verifier dashboard (already verified)
         const unverifiedArticles = updated.filter((a: Article) => a.verificationStatus !== 2);
+        console.log('Unverified articles remaining:', unverifiedArticles.length);
         setArticles(unverifiedArticles);
       }
-      
-      // Refresh homepage to show the newly verified article
-      setTimeout(() => {
-        console.log('Triggering refreshArticles...');
-        refreshArticles();
-      }, 1000);
       
       setSelectedArticle("");
       setVerificationScore(5);
@@ -114,11 +113,37 @@ export default function VerifierDashboard() {
   const submitVerification = () => {
     if (!selectedArticle) return;
 
+    // Immediately update localStorage before blockchain transaction
+    const storedArticles = localStorage.getItem('demoArticles');
+    if (storedArticles) {
+      const parsed = JSON.parse(storedArticles);
+      const updated = parsed.map((article: Article) => {
+        if (article.contentHash === selectedArticle) {
+          return {
+            ...article,
+            verificationStatus: 2, // HUMAN_VERIFIED
+            credibilityScore: verificationScore,
+            totalVotes: (article.totalVotes || 0) + 1
+          };
+        }
+        return article;
+      });
+      localStorage.setItem('demoArticles', JSON.stringify(updated));
+      
+      // Refresh immediately
+      refreshArticles();
+      
+      // Update local state
+      const unverifiedArticles = updated.filter((a: Article) => a.verificationStatus !== 2);
+      setArticles(unverifiedArticles);
+    }
+
+    // Then submit to blockchain
     addVerifierScore({
       address: CONTRACT_ADDRESSES.Verification,
       abi: VerificationABI,
       functionName: 'addVerifierScore',
-      args: [selectedArticle, verificationScore],
+      args: [selectedArticle, BigInt(verificationScore)],
     });
   };
 

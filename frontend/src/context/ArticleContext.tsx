@@ -184,9 +184,75 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchArticlesFromChain = useCallback(async () => {
+    // DEMO MODE: Prioritize localStorage, skip blockchain for now
+    console.log('=== Fetching Articles (Demo Mode) ===');
+    const storedArticles = localStorage.getItem('demoArticles');
+    
     if (!publicClient) {
+      // If no public client, only use localStorage
+      console.log('No publicClient - Loading from localStorage only');
+      console.log('localStorage content:', storedArticles);
+      
+      if (storedArticles) {
+        const parsed = JSON.parse(storedArticles);
+        console.log('Total demo articles:', parsed.length);
+        
+        const verifiedDemoArticles = parsed
+          .filter((a: any) => a.verificationStatus === 2)
+          .map((a: any, index: number) => ({
+            id: index + 1,
+            headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
+            summary: a.content || `Content hash: ${a.contentHash}`,
+            author: a.author,
+            status: "Verified" as const,
+            statusLabel: "Human Verified",
+            category: "Demo",
+            contentHash: a.contentHash,
+            credibilityScore: a.credibilityScore || 0,
+            imageUrl: `https://picsum.photos/seed/${a.contentHash.slice(0, 6)}/800/400`,
+            isOnChain: false,
+          }));
+        
+        console.log('Verified demo articles:', verifiedDemoArticles.length);
+        setArticles(verifiedDemoArticles.length > 0 ? verifiedDemoArticles : mockArticles);
+      } else {
+        setArticles(mockArticles);
+      }
       return;
     }
+    
+    // DEMO MODE: Load verified localStorage articles + always show mock articles
+    let demoArticles: Article[] = [];
+    if (storedArticles) {
+      const parsed = JSON.parse(storedArticles);
+      demoArticles = parsed
+        .filter((a: any) => a.verificationStatus === 2)
+        .map((a: any, index: number) => ({
+          id: mockArticles.length + index + 1,
+          headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
+          summary: a.content || `Content hash: ${a.contentHash}`,
+          author: a.author,
+          status: "Verified" as const,
+          statusLabel: "Human Verified",
+          category: "Demo",
+          contentHash: a.contentHash,
+          credibilityScore: a.credibilityScore || 0,
+          imageUrl: `https://picsum.photos/seed/${a.contentHash.slice(0, 6)}/800/400`,
+          isOnChain: false,
+        }));
+      
+      console.log('Demo mode - verified articles:', demoArticles.length);
+    }
+    
+    // Combine demo articles with mock articles (demo articles first)
+    const allArticles = [...demoArticles, ...mockArticles];
+    console.log('Total articles (demo + mock):', allArticles.length);
+    setArticles(allArticles);
+    
+    if (storedArticles) {
+      return; // Skip blockchain if we have localStorage
+    }
+    
     setIsLoading(true);
     try {
       // Use pagination: fetch from last 10000 blocks instead of block 0 for better performance
@@ -220,9 +286,16 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
               abi: VerificationABI,
               functionName: "newsItems",
               args: [hash],
-            })) as readonly [`0x${string}`, string, number | bigint, bigint];
+            })) as readonly [`0x${string}`, string, readonly bigint[], readonly bigint[], number, bigint];
 
-            const [reporter, arweaveHash, statusRaw, credibilityScore] = response;
+            const [reporter, arweaveHash, analyzerScores, verifierScores, statusRaw, credibilityScore] = response;
+            
+            // Skip if reporter address is zero (article doesn't exist)
+            if (reporter === "0x0000000000000000000000000000000000000000") {
+              console.log(`Article ${hash.slice(0, 10)} not found on-chain, skipping`);
+              return null;
+            }
+            
             const statusBigInt =
               typeof statusRaw === "bigint" ? statusRaw : BigInt(statusRaw);
             const metadata = await fetchArweaveMetadata(arweaveHash || hash);
@@ -257,10 +330,23 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
         const storedArticles = localStorage.getItem('demoArticles');
         let demoArticles: Article[] = [];
         
+        console.log('=== Loading demo articles alongside chain articles ===');
+        console.log('localStorage:', storedArticles);
+        
         if (storedArticles) {
           const parsed = JSON.parse(storedArticles);
+          console.log('Parsed demo articles:', parsed);
+          console.log('Checking verification status of each article:');
+          parsed.forEach((a: any) => {
+            console.log(`- ${a.contentHash.slice(0, 10)}: status=${a.verificationStatus}`);
+          });
+          
           demoArticles = parsed
-            .filter((a: any) => a.verificationStatus === 2) // Only show verified articles
+            .filter((a: any) => {
+              const isVerified = a.verificationStatus === 2;
+              console.log(`Article ${a.contentHash.slice(0, 10)} verified: ${isVerified}`);
+              return isVerified;
+            })
             .map((a: any, index: number) => ({
               id: chainArticles.length + index + 1,
               headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
@@ -274,20 +360,32 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
               imageUrl: `https://picsum.photos/seed/${a.contentHash.slice(0, 6)}/800/400`,
               isOnChain: false,
             }));
+          
+          console.log('Verified demo articles to display:', demoArticles.length);
         }
         
-        setArticles([...demoArticles, ...chainArticles.reverse()]);
+        const allArticles = [...demoArticles, ...chainArticles.reverse()];
+        console.log('Total articles to display:', allArticles.length);
+        setArticles(allArticles);
       } else {
         // Check localStorage even if no chain articles
         const storedArticles = localStorage.getItem('demoArticles');
-        console.log('Loading from localStorage:', storedArticles);
+        console.log('=== No chain articles, loading ONLY from localStorage ===');
+        console.log('localStorage content:', storedArticles);
         
         if (storedArticles) {
           const parsed = JSON.parse(storedArticles);
-          console.log('Parsed demo articles:', parsed);
+          console.log('Total demo articles in storage:', parsed.length);
+          console.log('Verification statuses:', parsed.map((a: any) => `${a.contentHash.slice(0, 8)}: ${a.verificationStatus}`));
           
           const demoArticles = parsed
-            .filter((a: any) => a.verificationStatus === 2)
+            .filter((a: any) => {
+              const isVerified = a.verificationStatus === 2;
+              if (!isVerified) {
+                console.log(`Filtering out ${a.contentHash.slice(0, 8)} - status: ${a.verificationStatus}`);
+              }
+              return isVerified;
+            })
             .map((a: any, index: number) => ({
               id: index + 1,
               headline: a.headline || `Article ${a.contentHash.slice(0, 10)}...`,
@@ -302,8 +400,10 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
               isOnChain: false,
             }));
           
+          console.log('Final verified articles to show:', demoArticles.length);
           setArticles(demoArticles.length > 0 ? demoArticles : mockArticles);
         } else {
+          console.log('No localStorage data found, using mock articles');
           setArticles(mockArticles);
         }
       }
@@ -317,6 +417,21 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     fetchArticlesFromChain();
+    
+    // Poll localStorage every 2 seconds for demo articles (ensures we catch updates)
+    const pollInterval = setInterval(() => {
+      const storedArticles = localStorage.getItem('demoArticles');
+      if (storedArticles) {
+        const parsed = JSON.parse(storedArticles);
+        const verifiedCount = parsed.filter((a: any) => a.verificationStatus === 2).length;
+        const currentVerifiedCount = articles.filter(a => a.category === "Demo").length;
+        
+        if (verifiedCount !== currentVerifiedCount) {
+          console.log(`Detected change: ${currentVerifiedCount} -> ${verifiedCount} verified articles`);
+          fetchArticlesFromChain();
+        }
+      }
+    }, 2000);
     
     // Listen for storage changes (for cross-tab updates)
     const handleStorageChange = (e: StorageEvent) => {
@@ -336,10 +451,11 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
     window.addEventListener('refreshArticles', handleRefreshEvent);
     
     return () => {
+      clearInterval(pollInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('refreshArticles', handleRefreshEvent);
     };
-  }, [fetchArticlesFromChain]);
+  }, [fetchArticlesFromChain, articles]);
 
   const filteredArticles = useMemo(
     () =>
@@ -376,9 +492,9 @@ export const ArticleProvider = ({ children }: { children: ReactNode }) => {
         abi: VerificationABI,
         functionName: "newsItems",
         args: [contentHash],
-      })) as readonly [`0x${string}`, string, number | bigint, bigint];
+      })) as readonly [`0x${string}`, string, readonly bigint[], readonly bigint[], number, bigint];
 
-      const [reporter, arweaveHash, statusRaw, credibilityScore] = response;
+      const [reporter, arweaveHash, analyzerScores, verifierScores, statusRaw, credibilityScore] = response;
       const statusBigInt = typeof statusRaw === "bigint" ? statusRaw : BigInt(statusRaw);
       const metadata = await fetchArweaveMetadata(arweaveHash || contentHash);
 

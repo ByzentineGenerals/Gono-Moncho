@@ -5,6 +5,7 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { CONTRACT_ADDRESSES, NewsDAOABI, CREDABI } from "@/lib/contracts";
 import { formatEther } from "viem";
 import Link from "next/link";
+import { useTranslations } from 'next-intl';
 import DelegationSection from "@/components/DelegationSection";
 import StakingSection from "@/components/StakingSection";
 
@@ -18,13 +19,6 @@ type Proposal = {
   executed: boolean;
 };
 
-const PROPOSAL_TYPES = {
-  0: "General Governance",
-  1: "Parameter Change",
-  2: "Emergency Action",
-  3: "Treasury Management",
-};
-
 const PROPOSAL_EMOJIS = {
   0: "🏛️",
   1: "⚙️",
@@ -33,6 +27,14 @@ const PROPOSAL_EMOJIS = {
 };
 
 export default function GovernancePage() {
+  const t = useTranslations();
+  
+  const PROPOSAL_TYPES = {
+    0: t('governance.generalGovernance'),
+    1: t('governance.parameterChange'),
+    2: t('governance.emergencyAction'),
+    3: t('governance.treasuryManagement'),
+  };
   const { address, isConnected } = useAccount();
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [selectedProposal, setSelectedProposal] = useState<number | null>(null);
@@ -127,7 +129,7 @@ export default function GovernancePage() {
         <div className="mb-6">
           <Link href="/" className="inline-flex items-center gap-2 text-primary-600 hover:text-primary-700 font-semibold transition-colors duration-200 group">
             <span className="group-hover:-translate-x-1 transition-transform duration-200">←</span>
-            <span>Back to Articles</span>
+            <span>{t('governance.backToArticles')}</span>
           </Link>
         </div>
 
@@ -151,23 +153,23 @@ export default function GovernancePage() {
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJNIDQwIDAgTCAwIDAgMCA0MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLW9wYWNpdHk9IjAuMSIgc3Ryb2tlLXdpZHRoPSIxIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIi8+PC9zdmc+')] opacity-20"></div>
           <div className="relative z-10">
             <h1 className="text-5xl font-black mb-4 flex items-center gap-3">
-              <span>🏛️</span> DAO Governance
+              <span>🏛️</span> {t('governance.title')}
             </h1>
             <p className="text-xl text-primary-50 mb-6 max-w-3xl">
-              Shape the future of decentralized journalism. Use your CRED tokens to create proposals and vote on important platform decisions.
+              {t('governance.subtitle')}
             </p>
             <div className="grid md:grid-cols-3 gap-4 mt-8">
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="text-3xl font-black text-white">{votingPower}</div>
-                <div className="text-sm text-primary-100">Your Voting Power (CRED)</div>
+                <div className="text-sm text-primary-100">{t('governance.votingPower')}</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="text-3xl font-black text-white">{hasVotingPower ? "✓" : "✗"}</div>
-                <div className="text-sm text-primary-100">Eligible to Vote</div>
+                <div className="text-sm text-primary-100">{t('governance.eligibleToVote')}</div>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
                 <div className="text-3xl font-black text-white">∞</div>
-                <div className="text-sm text-primary-100">Active Proposals</div>
+                <div className="text-sm text-primary-100">{t('governance.activeProposals')}</div>
               </div>
             </div>
           </div>
@@ -187,16 +189,16 @@ export default function GovernancePage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-8">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white">
             <h2 className="text-2xl font-black flex items-center gap-2">
-              <span>✨</span> Create New Proposal
+              <span>✨</span> {t('governance.createNewProposal')}
             </h2>
-            <p className="text-indigo-100 mt-2">Submit a proposal for community vote</p>
+            <p className="text-indigo-100 mt-2">{t('governance.submitProposalDescription')}</p>
           </div>
           <div className="p-8">
             {isConnected ? (
               <div>
                 <div className="mb-6">
                   <label className="text-lg font-bold text-gray-900 mb-3 flex items-center gap-2">
-                    <span>📋</span> Proposal Type
+                    <span>📋</span> {t('governance.proposalType')}
                   </label>
                   <div className="grid md:grid-cols-2 gap-4 mt-3">
                     {Object.entries(PROPOSAL_TYPES).map(([key, value]) => (
@@ -223,12 +225,12 @@ export default function GovernancePage() {
                   {isWriting || isConfirming ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-3 border-white border-t-transparent"></div>
-                      <span>Creating Proposal...</span>
+                      <span>{t('governance.creatingProposal')}</span>
                     </>
                   ) : (
                     <>
                       <span>🚀</span>
-                      <span>Submit Proposal</span>
+                      <span>{t('governance.submitProposal')}</span>
                     </>
                   )}
                 </button>
@@ -236,8 +238,8 @@ export default function GovernancePage() {
             ) : (
               <div className="p-6 bg-yellow-50 border-2 border-yellow-200 rounded-xl text-center">
                 <span className="text-4xl mb-3 block">🔒</span>
-                <p className="font-bold text-yellow-800 mb-2">Connect Wallet to Participate</p>
-                <p className="text-sm text-yellow-700">Please connect your wallet to create proposals and vote.</p>
+                <p className="font-bold text-yellow-800 mb-2">{t('governance.connectWalletToParticipate')}</p>
+                <p className="text-sm text-yellow-700">{t('governance.connectWalletDescription')}</p>
               </div>
             )}
           </div>
@@ -247,9 +249,9 @@ export default function GovernancePage() {
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
             <h2 className="text-2xl font-black flex items-center gap-2">
-              <span>📊</span> Active Proposals
+              <span>📊</span> {t('governance.activeProposals')}
             </h2>
-            <p className="text-purple-100 mt-2">Vote on community proposals</p>
+            <p className="text-purple-100 mt-2">{t('governance.voteOnProposals')}</p>
           </div>
           <div className="p-8">
             <div className="bg-gradient-to-r from-yellow-50 to-amber-50 p-6 rounded-xl border-2 border-yellow-200 mb-6">
@@ -257,15 +259,15 @@ export default function GovernancePage() {
                 <span className="text-2xl">ℹ️</span>
                 <div>
                   <p className="font-bold text-yellow-800 mb-2">
-                    Proposal Indexing Required
+                    {t('governance.proposalIndexingRequired')}
                   </p>
                   <p className="text-sm text-yellow-700 mb-2">
-                    To display all proposals, you'll need to integrate:
+                    {t('governance.toDisplayAllProposals')}
                   </p>
                   <ul className="text-sm text-yellow-700 space-y-1 ml-4">
-                    <li>• Index ProposalCreated events from the contract</li>
-                    <li>• Set up a subgraph for efficient querying</li>
-                    <li>• Use a backend API to cache proposal data</li>
+                    <li>• {t('governance.indexProposalEvents')}</li>
+                    <li>• {t('governance.setupSubgraph')}</li>
+                    <li>• {t('governance.useBackendAPI')}</li>
                   </ul>
                 </div>
               </div>
@@ -275,24 +277,24 @@ export default function GovernancePage() {
             <div className="border-2 border-gray-200 rounded-xl p-6 opacity-60 hover:opacity-100 transition-opacity duration-300">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900">Example Proposal #1</h3>
+                  <h3 className="text-xl font-bold text-gray-900">{t('governance.exampleProposal')}</h3>
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-2xl">🏛️</span>
-                    <p className="text-sm text-gray-600 font-medium">General Governance</p>
+                    <p className="text-sm text-gray-600 font-medium">{t('governance.generalGovernance')}</p>
                   </div>
                 </div>
                 <span className="px-4 py-2 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 rounded-full text-sm font-bold border-2 border-green-200">
-                  ✓ Active
+                  ✓ {t('governance.active')}
                 </span>
               </div>
               
               <div className="grid grid-cols-2 gap-4 mb-6 mt-6">
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-4 rounded-xl border-2 border-green-200">
-                  <p className="text-sm text-green-700 font-semibold mb-1">✓ For Votes</p>
+                  <p className="text-sm text-green-700 font-semibold mb-1">✓ {t('governance.forVotes')}</p>
                   <p className="text-2xl font-black text-green-700">0 CRED</p>
                 </div>
                 <div className="bg-gradient-to-br from-red-50 to-rose-50 p-4 rounded-xl border-2 border-red-200">
-                  <p className="text-sm text-red-700 font-semibold mb-1">✗ Against Votes</p>
+                  <p className="text-sm text-red-700 font-semibold mb-1">✗ {t('governance.againstVotes')}</p>
                   <p className="text-2xl font-black text-red-700">0 CRED</p>
                 </div>
               </div>
@@ -300,7 +302,7 @@ export default function GovernancePage() {
               <div className="flex flex-col sm:flex-row items-stretch gap-3">
                 <input
                   type="number"
-                  placeholder="Enter vote amount..."
+                  placeholder={t('governance.enterVoteAmount')}
                   className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   disabled
                 />
@@ -308,13 +310,13 @@ export default function GovernancePage() {
                   disabled
                   className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg"
                 >
-                  Vote For
+                  {t('governance.voteFor')}
                 </button>
                 <button
                   disabled
                   className="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl font-bold disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed shadow-lg"
                 >
-                  Vote Against
+                  {t('governance.voteAgainst')}
                 </button>
               </div>
             </div>
