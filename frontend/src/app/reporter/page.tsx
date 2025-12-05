@@ -7,13 +7,22 @@ import { useAccount, useReadContract } from "wagmi";
 import { CONTRACT_ADDRESSES, ReporterRegistryABI } from "@/lib/contracts";
 import dynamic from "next/dynamic";
 
-// Dynamically import PublishForm to avoid SSR issues
-const PublishForm = dynamic(() => import("@/components/PublishForm"), { ssr: false });
+// Dynamically import PublishForm to avoid SSR issues - with loading state
+const PublishForm = dynamic(() => import("@/components/PublishForm"), { 
+  ssr: false,
+  loading: () => <div className="p-8 text-center">Loading publish form...</div>
+});
 
 export default function ReporterPage() {
   const [activeTab, setActiveTab] = useState<"register" | "upload" | "publish">("register");
   const [uploadedHash, setUploadedHash] = useState("");
+  const [isClient, setIsClient] = useState(false);
   const { address } = useAccount();
+
+  // Ensure we're on client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // Check if user can publish
   const { data: canPublishData } = useReadContract({
@@ -22,7 +31,7 @@ export default function ReporterPage() {
     functionName: 'canPublish',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && isClient,
     }
   });
 
@@ -86,7 +95,7 @@ export default function ReporterPage() {
             {activeTab === "upload" && (
               <ArweaveUploadHelper onUploadComplete={handleUploadComplete} />
             )}
-            {activeTab === "publish" && <PublishForm />}
+            {activeTab === "publish" && isClient && <PublishForm />}
           </div>
 
           {/* Sidebar */}
