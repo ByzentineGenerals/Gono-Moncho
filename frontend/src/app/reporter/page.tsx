@@ -7,6 +7,10 @@ import { useAccount, useReadContract } from "wagmi";
 import { CONTRACT_ADDRESSES, ReporterRegistryABI } from "@/lib/contracts";
 import dynamic from "next/dynamic";
 
+// Force dynamic rendering - prevent static generation at build time
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Dynamically import PublishForm to avoid SSR issues - with loading state
 const PublishForm = dynamic(() => import("@/components/PublishForm"), { 
   ssr: false,
