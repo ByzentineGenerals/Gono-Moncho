@@ -15,17 +15,36 @@ export default function ConnectButton() {
   const chainId = useChainId();
   const [showNetworkWarning, setShowNetworkWarning] = useState(false);
 
-  // Check if user is on wrong network
+  // Check if user is on wrong network and auto-switch
   useEffect(() => {
     if (isConnected && chainId !== polygonAmoy.id) {
       setShowNetworkWarning(true);
+      // Auto-switch to Polygon Amoy after a short delay
+      const timer = setTimeout(() => {
+        switchChain({ chainId: polygonAmoy.id });
+      }, 1000);
+      return () => clearTimeout(timer);
     } else {
       setShowNetworkWarning(false);
     }
-  }, [isConnected, chainId]);
+  }, [isConnected, chainId, switchChain]);
 
   const handleSwitchNetwork = () => {
     switchChain({ chainId: polygonAmoy.id });
+  };
+
+  const handleConnect = async () => {
+    try {
+      await connect({ connector: injected() });
+      // After connection, check and switch network if needed
+      setTimeout(() => {
+        if (chainId !== polygonAmoy.id) {
+          switchChain({ chainId: polygonAmoy.id });
+        }
+      }, 500);
+    } catch (error) {
+      console.error('Connection error:', error);
+    }
   };
 
   if (isConnected) {
@@ -66,7 +85,7 @@ export default function ConnectButton() {
 
   return (
     <button
-      onClick={() => connect({ connector: injected() })}
+      onClick={handleConnect}
       className="bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white font-bold py-2.5 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
     >
       <span>🔗</span>
