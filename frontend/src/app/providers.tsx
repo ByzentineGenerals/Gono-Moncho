@@ -5,6 +5,7 @@ import { WagmiProvider, createConfig, http } from 'wagmi';
 import { polygonAmoy } from 'wagmi/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastProvider } from '@/context/ToastContext';
+import { ArticleProvider } from '@/context/ArticleContext';
 
 // 1. Create a wagmi config pointed at Polygon Amoy
 export const config = createConfig({
@@ -23,7 +24,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <ToastProvider>
-          {children}
+          <ArticleProvider>
+            {children}
+          </ArticleProvider>
         </ToastProvider>
       </QueryClientProvider>
     </WagmiProvider>
