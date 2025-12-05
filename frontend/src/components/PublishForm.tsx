@@ -6,8 +6,10 @@ import { VerificationABI, CONTRACT_ADDRESSES } from '@/lib/contracts';
 import { useArticles } from '@/context/ArticleContext';
 import { useToast } from '@/context/ToastContext';
 import { keccak256, stringToBytes } from 'viem';
+import { useTranslations } from 'next-intl';
 
 export default function PublishForm() {
+  const t = useTranslations();
   const { address } = useAccount();
   const [headline, setHeadline] = useState('');
   const [content, setContent] = useState('');
@@ -132,14 +134,14 @@ export default function PublishForm() {
         {/* Headline */}
         <div>
           <label htmlFor="headline" className="block text-sm font-medium text-gray-700 mb-2">
-            Headline *
+            {t('publishArticle.headline')} *
           </label>
           <input
             id="headline"
             type="text"
             value={headline}
             onChange={(e) => setHeadline(e.target.value)}
-            placeholder="Enter a compelling headline..."
+            placeholder={t('publishArticle.headlinePlaceholder')}
             required
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-semibold"
           />
@@ -148,26 +150,26 @@ export default function PublishForm() {
         {/* Content */}
         <div>
           <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
-            Article Content *
+            {t('publishArticle.articleContent')} *
           </label>
           <textarea
             id="content"
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="Write your article here... Be detailed and factual."
+            placeholder={t('publishArticle.contentPlaceholder')}
             required
             rows={12}
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-y"
           />
           <p className="text-xs text-gray-500 mt-1">
-            {content.length} characters
+            {content.length} {t('publishArticle.characters')}
           </p>
         </div>
 
         {/* Optional Video */}
         <div>
           <label htmlFor="video" className="block text-sm font-medium text-gray-700 mb-2">
-            Video/Media (Optional)
+            {t('publishArticle.videoMedia')}
           </label>
           <input
             id="video"
@@ -178,7 +180,7 @@ export default function PublishForm() {
           />
           {videoFile && (
             <p className="text-sm text-green-600 mt-2">
-              ✓ Selected: {videoFile.name}
+              ✓ {t('publishArticle.selected')}: {videoFile.name}
             </p>
           )}
         </div>
@@ -193,15 +195,15 @@ export default function PublishForm() {
             {isUploadingToArweave ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Uploading to Arweave...
+                {t('publishArticle.uploadingToArweave')}
               </span>
             ) : isConfirming ? (
               <span className="flex items-center justify-center gap-2">
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Publishing to Blockchain...
+                {t('publishArticle.publishingToBlockchain')}
               </span>
             ) : (
-              "📰 Publish Article"
+              `📰 ${t('publishArticle.publishButton')}`
             )}
           </button>
           <button
@@ -213,30 +215,30 @@ export default function PublishForm() {
             }}
             className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all font-medium"
           >
-            Clear
+            {t('publishArticle.clear')}
           </button>
         </div>
       </form>
 
       {/* Info Box */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-        <h3 className="font-semibold text-blue-800 mb-2">📋 Publishing Process</h3>
+        <h3 className="font-semibold text-blue-800 mb-2">📋 {t('publishArticle.publishingProcess')}</h3>
         <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Step 1: Your article is uploaded to Arweave for permanent storage</li>
-          <li>• Step 2: The Arweave hash is published to the blockchain</li>
-          <li>• Step 3: Community can verify and vote on your article</li>
-          <li>• Quality reporting earns CRED reputation tokens</li>
+          <li>• {t('publishArticle.step1')}</li>
+          <li>• {t('publishArticle.step2')}</li>
+          <li>• {t('publishArticle.step3')}</li>
+          <li>• {t('publishArticle.step4')}</li>
         </ul>
       </div>
 
       {/* Tips */}
       <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-        <h3 className="font-semibold text-gray-800 mb-2">💡 Tips for Success</h3>
+        <h3 className="font-semibold text-gray-800 mb-2">💡 {t('publishArticle.tipsTitle')}</h3>
         <ul className="text-sm text-gray-700 space-y-1">
-          <li>• Upload supporting media to Arweave/IPFS first</li>
-          <li>• Include timestamps and location details</li>
-          <li>• Provide context and background information</li>
-          <li>• Proofread before publishing</li>
+          <li>• {t('publishArticle.tip1')}</li>
+          <li>• {t('publishArticle.tip2')}</li>
+          <li>• {t('publishArticle.tip3')}</li>
+          <li>• {t('publishArticle.tip4')}</li>
         </ul>
       </div>
     </div>

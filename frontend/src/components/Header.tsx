@@ -33,12 +33,8 @@ export default function Header() {
     }, 0);
   };
 
-  const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleLogoClick = () => {
     setSelectedCategory('All');
-    setTimeout(() => {
-      router.push(`/${locale}`);
-    }, 0);
   };
 
   return (
@@ -60,6 +56,7 @@ export default function Header() {
             <Link 
               href={`/${locale}/reporter`}
               className="group relative font-semibold text-gray-700 hover:text-primary-600 transition-all duration-300 px-3 py-2"
+              prefetch={true}
             >
               <span className="relative z-10">🎤 {t('nav.reporters')}</span>
               <span className="absolute inset-0 bg-primary-50 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
@@ -68,6 +65,7 @@ export default function Header() {
             <Link 
               href={`/${locale}/governance`}
               className="group relative font-semibold text-gray-700 hover:text-primary-600 transition-all duration-300 px-3 py-2"
+              prefetch={true}
             >
               <span className="relative z-10">🏛️ {t('nav.governance')}</span>
               <span className="absolute inset-0 bg-primary-50 rounded-lg scale-0 group-hover:scale-100 transition-transform duration-300"></span>
@@ -85,7 +83,7 @@ export default function Header() {
       
       {/* Main header with logo - Enhanced with gradient and animations */}
       <div className="py-8 text-center bg-gradient-to-r from-gray-50 via-white to-gray-50">
-        <Link href={`/${locale}`} className="group inline-block" onClick={handleLogoClick}>
+        <Link href={`/${locale}`} className="group inline-block" onClick={handleLogoClick} prefetch={true}>
           <h1 className="text-6xl md:text-7xl font-serif font-black bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent group-hover:from-primary-700 group-hover:via-primary-600 group-hover:to-primary-700 transition-all duration-500 tracking-tight">
             {locale === 'bn' ? 'গণ-মঞ্চ' : 'Gono Moncho'}
           </h1>
@@ -105,20 +103,33 @@ export default function Header() {
           <div className="flex items-center justify-center gap-4 py-3">
             {/* Categories */}
             <ul className="flex gap-1 overflow-x-auto scrollbar-hide">
-              {categories.map((cat) => (
-                <li key={cat}>
-                  <button
-                    onClick={() => handleCategoryClick(cat)}
-                    className={`px-5 py-2.5 rounded-lg font-semibold text-sm whitespace-nowrap transition-all duration-300 ${
-                      selectedCategory === cat
-                        ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg scale-105'
-                        : 'text-gray-700 hover:bg-gray-100 hover:text-primary-600'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                </li>
-              ))}
+              {categories.map((cat) => {
+                // Map category to translation key
+                let translationKey = cat;
+                if (cat === 'Tech & Startup') {
+                  translationKey = 'Tech & Startup';
+                } else {
+                  // Normalize: first char lowercase
+                  translationKey = cat.charAt(0).toLowerCase() + cat.slice(1);
+                }
+                
+                const displayText = t(`categories.${translationKey}`, { defaultValue: cat });
+                
+                return (
+                  <li key={cat}>
+                    <button
+                      onClick={() => handleCategoryClick(cat)}
+                      className={`px-5 py-2.5 rounded-lg font-semibold text-sm whitespace-nowrap transition-all duration-300 ${
+                        selectedCategory === cat
+                          ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg scale-105'
+                          : 'text-gray-700 hover:bg-gray-100 hover:text-primary-600'
+                      }`}
+                    >
+                      {displayText}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
 
             {/* Search Bar */}

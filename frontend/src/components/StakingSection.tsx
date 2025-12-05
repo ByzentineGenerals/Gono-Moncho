@@ -5,8 +5,10 @@ import { useAccount, useReadContract, useWriteContract, useWaitForTransactionRec
 import { CONTRACT_ADDRESSES, NewsStakingABI, NEWSABI } from "@/lib/contracts";
 import { formatEther, parseEther } from "viem";
 import { useToast } from "@/context/ToastContext";
+import { useTranslations } from 'next-intl';
 
 export default function StakingSection() {
+  const t = useTranslations();
   const { address, isConnected } = useAccount();
   const [stakeAmount, setStakeAmount] = useState("");
   const [unstakeAmount, setUnstakeAmount] = useState("");
@@ -115,9 +117,9 @@ export default function StakingSection() {
   if (!isConnected) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold mb-4">💰 Stake NEWS Tokens</h2>
+        <h2 className="text-2xl font-bold mb-4">💰 {t('governance.stakeNewsTokens')}</h2>
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
-          <p className="text-yellow-800">Please connect your wallet to stake tokens.</p>
+          <p className="text-yellow-800">{t('governance.connectWalletToStake')}</p>
         </div>
       </div>
     );
@@ -129,19 +131,19 @@ export default function StakingSection() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">💰 Stake NEWS Tokens</h2>
+      <h2 className="text-2xl font-bold mb-4">💰 {t('governance.stakeNewsTokens')}</h2>
       <p className="text-gray-600 mb-6">
-        Stake your NEWS tokens to earn CRED reputation tokens and participate in governance.
+        {t('governance.stakeDescription')}
       </p>
 
       {/* Balance Display */}
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-800 mb-1">Available NEWS</p>
+          <p className="text-sm text-blue-800 mb-1">{t('governance.availableNews')}</p>
           <p className="text-2xl font-bold text-blue-900">{parseFloat(newsBalanceFormatted).toFixed(2)}</p>
         </div>
         <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <p className="text-sm text-green-800 mb-1">Staked NEWS</p>
+          <p className="text-sm text-green-800 mb-1">{t('governance.stakedNews')}</p>
           <p className="text-2xl font-bold text-green-900">{parseFloat(stakedAmount).toFixed(2)}</p>
           {isMounted && stakedAt > 0 && (
             <p className="text-xs text-green-700 mt-1">
@@ -153,11 +155,11 @@ export default function StakingSection() {
 
       {/* Stake Section */}
       <div className="mb-6 p-4 border border-gray-200 rounded-lg">
-        <h3 className="font-semibold mb-3">Stake Tokens</h3>
+        <h3 className="font-semibold mb-3">{t('governance.stakeTokens')}</h3>
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Amount to Stake
+              {t('governance.amountToStake')}
             </label>
             <input
               type="number"
@@ -175,18 +177,18 @@ export default function StakingSection() {
               disabled={isWriting || isConfirming || !stakeAmount}
               className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {isConfirming ? "Approving..." : "1. Approve"}
+              {isConfirming ? t('governance.approving') : t('governance.approve')}
             </button>
             <button
               onClick={handleStake}
               disabled={isWriting || isConfirming || !stakeAmount}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {isConfirming ? "Staking..." : "2. Stake"}
+              {isConfirming ? t('governance.staking') : t('governance.stake')}
             </button>
           </div>
           <p className="text-xs text-gray-500">
-            First approve the contract to spend your NEWS tokens, then stake them.
+            {t('governance.approveStakeInfo')}
           </p>
         </div>
       </div>
@@ -194,11 +196,11 @@ export default function StakingSection() {
       {/* Unstake Section */}
       {parseFloat(stakedAmount) > 0 && (
         <div className="p-4 border border-gray-200 rounded-lg">
-          <h3 className="font-semibold mb-3">Unstake Tokens</h3>
+          <h3 className="font-semibold mb-3">{t('governance.unstakeTokens')}</h3>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount to Unstake
+                {t('governance.amountToUnstake')}
               </label>
               <input
                 type="number"
@@ -216,7 +218,7 @@ export default function StakingSection() {
               disabled={isWriting || isConfirming || !unstakeAmount}
               className="w-full px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
             >
-              {isConfirming ? "Unstaking..." : "Unstake"}
+              {isConfirming ? t('governance.unstaking') : t('governance.unstake')}
             </button>
           </div>
         </div>
@@ -224,12 +226,12 @@ export default function StakingSection() {
 
       {/* Info Section */}
       <div className="mt-6 bg-gray-50 p-4 rounded-lg">
-        <h3 className="font-semibold text-gray-800 mb-2">ℹ️ How Staking Works</h3>
+        <h3 className="font-semibold text-gray-800 mb-2">ℹ️ {t('governance.howStakingWorks')}</h3>
         <ul className="text-sm text-gray-700 space-y-1">
-          <li>• Stake NEWS tokens to become eligible for journalist verification</li>
-          <li>• Earn CRED reputation tokens over time</li>
-          <li>• Higher stake = more voting power in DAO governance</li>
-          <li>• Unstake anytime, but may affect your voting power</li>
+          <li>• {t('governance.stakingInfo1')}</li>
+          <li>• {t('governance.stakingInfo2')}</li>
+          <li>• {t('governance.stakingInfo3')}</li>
+          <li>• {t('governance.stakingInfo4')}</li>
         </ul>
       </div>
     </div>

@@ -128,45 +128,45 @@ export default function ReporterPage() {
           <div className="space-y-6">
             {/* Quick Stats */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-bold text-lg mb-4">📊 Platform Stats</h3>
+              <h3 className="font-bold text-lg mb-4">📊 {t('reporterPortal.platformStats')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Verified Reporters</span>
+                  <span className="text-gray-600">{t('reporterPortal.verifiedReporters')}</span>
                   <span className="font-semibold">1,234</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Published Articles</span>
+                  <span className="text-gray-600">{t('reporterPortal.publishedArticles')}</span>
                   <span className="font-semibold">5,678</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Staked</span>
+                  <span className="text-gray-600">{t('reporterPortal.totalStaked')}</span>
                   <span className="font-semibold">12,345 NEWS</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Testing Mode</span>
-                  <span className="font-semibold text-green-600">Active ✅</span>
+                  <span className="text-gray-600">{t('reporterPortal.testingMode')}</span>
+                  <span className="font-semibold text-green-600">{t('reporterPortal.active')} ✅</span>
                 </div>
               </div>
             </div>
 
             {/* Requirements */}
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h3 className="font-bold text-lg mb-4">📋 Role Requirements</h3>
+              <h3 className="font-bold text-lg mb-4">📋 {t('reporterPortal.roleRequirements')}</h3>
               <div className="space-y-4">
                 <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="font-semibold text-blue-800">Reporter</p>
-                  <p className="text-sm text-blue-700">Stake: 100 NEWS</p>
-                  <p className="text-xs text-blue-600">Publish news articles</p>
+                  <p className="font-semibold text-blue-800">{t('reporterPortal.roleLabels.reporter')}</p>
+                  <p className="text-sm text-blue-700">{t('reporterPortal.stakeRequired')}: 100 NEWS</p>
+                  <p className="text-xs text-blue-600">{t('reporterPortal.roleDescriptions.reporter')}</p>
                 </div>
                 <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="font-semibold text-purple-800">Analyzer</p>
-                  <p className="text-sm text-purple-700">Stake: 50 NEWS</p>
-                  <p className="text-xs text-purple-600">Analyze credibility</p>
+                  <p className="font-semibold text-purple-800">{t('reporterPortal.roleLabels.analyzer')}</p>
+                  <p className="text-sm text-purple-700">{t('reporterPortal.stakeRequired')}: 50 NEWS</p>
+                  <p className="text-xs text-purple-600">{t('reporterPortal.roleDescriptions.analyzer')}</p>
                 </div>
                 <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                  <p className="font-semibold text-green-800">Verifier</p>
-                  <p className="text-sm text-green-700">Stake: 25 NEWS</p>
-                  <p className="text-xs text-green-600">Verify and score</p>
+                  <p className="font-semibold text-green-800">{t('reporterPortal.roleLabels.verifier')}</p>
+                  <p className="text-sm text-green-700">{t('reporterPortal.stakeRequired')}: 25 NEWS</p>
+                  <p className="text-xs text-green-600">{t('reporterPortal.roleDescriptions.verifier')}</p>
                 </div>
               </div>
             </div>
