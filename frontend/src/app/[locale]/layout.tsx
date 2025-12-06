@@ -7,6 +7,9 @@ import "../globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export const metadata: Metadata = {
   title: "গণ-মঞ্চ | Gono Moncho",
   description: "বাংলাদেশের বিকেন্দ্রীকৃত সংবাদ মাধ্যম | Bangladesh's Decentralized News Platform",

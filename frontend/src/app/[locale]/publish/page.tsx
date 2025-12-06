@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+
+export const dynamic = 'force-dynamic';
 import { VerificationABI, CONTRACT_ADDRESSES, ReporterRegistryABI } from '@/lib/contracts';
 import { useArticles } from '@/context/ArticleContext';
 import { useToast } from '@/context/ToastContext';

@@ -9,6 +9,8 @@ import { CONTRACT_ADDRESSES, ReporterRegistryABI } from "@/lib/contracts";
 import dynamic from "next/dynamic";
 import { useTranslations } from 'next-intl';
 
+export const dynamic = 'force-dynamic';
+
 // Dynamically import PublishForm to avoid SSR issues
 const PublishForm = dynamic(() => import("@/components/PublishForm"), { ssr: false });
 

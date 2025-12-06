@@ -9,6 +9,8 @@ import { useTranslations } from 'next-intl';
 import DelegationSection from "@/components/DelegationSection";
 import StakingSection from "@/components/StakingSection";
 
+export const dynamic = 'force-dynamic';
+
 type Proposal = {
   id: bigint;
   pType: number;

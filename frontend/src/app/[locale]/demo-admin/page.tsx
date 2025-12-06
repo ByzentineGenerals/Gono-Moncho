@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useSwitchChain, useChainId, useReadContract } from 'wagmi';
+
+export const dynamic = 'force-dynamic';
 import { CONTRACT_ADDRESSES, ReporterRegistryABI } from '@/lib/contracts';
 import { polygonAmoy } from 'wagmi/chains';
 
