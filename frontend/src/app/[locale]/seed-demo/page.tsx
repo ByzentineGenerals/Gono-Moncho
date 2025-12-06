@@ -6,6 +6,8 @@ import { CONTRACT_ADDRESSES, VerificationABI } from "@/lib/contracts";
 import { demoArticles } from "@/lib/demoArticles";
 import { useToast } from "@/context/ToastContext";
 
+export const dynamic = 'force-dynamic';
+
 export default function SeedDemoPage() {
   const { address, isConnected } = useAccount();
   const [publishingIndex, setPublishingIndex] = useState<number | null>(null);
